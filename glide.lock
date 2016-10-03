@@ -1,0 +1,51 @@
+hash: ada43d3bb155197ea4948522fe5d21fc39dbb1a72e1f7e7b0497884b9e919d8f
+updated: 2016-10-04T02:27:21.096407153+09:00
+imports:
+- name: github.com/jessevdk/go-flags
+  version: 4cc2832a6e6d1d3b815e2b9d544b2a4dfb3ce8fa
+- name: github.com/nlopes/slack
+  version: a1a63712460a18dbe828ae915f954a0f214f3d8e
+- name: github.com/onsi/ginkgo
+  version: 45a5f6ffb2a14e4f29698c16ae4c0a34018a8951
+  subpackages:
+  - config
+  - internal/codelocation
+  - internal/containernode
+  - internal/failer
+  - internal/leafnodes
+  - internal/remote
+  - internal/spec
+  - internal/specrunner
+  - internal/suite
+  - internal/testingtproxy
+  - internal/writer
+  - reporters
+  - reporters/stenographer
+  - types
+- name: github.com/onsi/gomega
+  version: d59fa0ac68bb5dd932ee8d24eed631cdd519efc3
+  subpackages:
+  - format
+  - internal/assertion
+  - internal/asyncassertion
+  - internal/oraclematcher
+  - internal/testingtsupport
+  - matchers
+  - matchers/support/goraph/bipartitegraph
+  - matchers/support/goraph/edge
+  - matchers/support/goraph/node
+  - matchers/support/goraph/util
+  - types
+- name: golang.org/x/net
+  version: 0f2be02c5ddfa7c7936000ad519b04c6c795eab3
+  subpackages:
+  - websocket
+- name: golang.org/x/oauth2
+  version: 3c3a985cb79f52a3190fbc056984415ca6763d01
+- name: golang.org/x/sys
+  version: 8f0908ab3b2457e2e15403d3697c9ef5cb4b57a9
+  subpackages:
+  - unix
+- name: gopkg.in/yaml.v2
+  version: a5b47d31c556af34a302ce5d659e6fea44d90de0
+testImports: []
