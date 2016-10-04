@@ -1,7 +1,7 @@
 package slack
 
 import (
-	"fmt"
+	"log"
 	"strconv"
 	"strings"
 	"time"
@@ -11,14 +11,6 @@ import (
 
 func New(token string) *slack.Client {
 	return slack.New(token)
-}
-
-func LastRead(channel *slack.Channel) time.Time {
-	if channel != nil {
-		lastRead, _ := toTime(channel.LastRead)
-		return lastRead
-	}
-	return time.Now()
 }
 
 func StarredChannelIDs(client *slack.Client) []string {
@@ -34,12 +26,12 @@ func StarredChannelIDs(client *slack.Client) []string {
 	return stars
 }
 
-func MayBeLeaveChannel(canDryRun bool, client *slack.Client, channel slack.Channel, starredIDs []string) {
+func MayBeLeaveChannel(canDryRun bool, beforeMonth int, client *slack.Client, channel slack.Channel, starredIDs []string) {
 	if channel.IsMember {
 		channelInfo, _ := client.GetChannelInfo(channel.ID)
-		canLeave := canLeave(channelInfo, starredIDs)
+		canLeave := canLeave(channelInfo, starredIDs, beforeMonth)
 		if canLeave {
-			fmt.Println(channel.Name, LastRead(channelInfo), canLeave)
+			log.Println(channel.Name, lastRead(channelInfo), canLeave)
 			if !canDryRun {
 				client.LeaveChannel(channel.ID)
 			}
@@ -48,17 +40,16 @@ func MayBeLeaveChannel(canDryRun bool, client *slack.Client, channel slack.Chann
 }
 
 // condition of leaving channel
-// 1. last of talking date is more than 1 month elapsed
+// 1. last of talking date is more than X month elapsed
 // 2. however this shall not apply when its channel is added star
-func canLeave(channel *slack.Channel, starredIDs []string) bool {
-	lastRead := LastRead(channel)
+func canLeave(channel *slack.Channel, starredIDs []string, beforeMonth int) bool {
 
 	switch {
 	case channel == nil:
 		return false
 	case includes(channel.ID, starredIDs):
 		return false
-	case lastRead.Before(time.Now().AddDate(0, -1, 0)):
+	case beforeLastRead(channel, beforeMonth):
 		return true
 	default:
 		return false
@@ -78,4 +69,19 @@ func toTime(lastReadUnix string) (time.Time, error) {
 	unixStr := strings.Split(lastReadUnix, ".")[0]
 	unix, error := strconv.ParseInt(unixStr, 10, 64)
 	return time.Unix(unix, 0), error
+}
+
+func beforeLastRead(channel *slack.Channel, beforeMonth int) bool {
+	if 0 >= beforeMonth {
+		beforeMonth = 1
+	}
+	return lastRead(channel).Before(time.Now().AddDate(0, beforeMonth*-1, 0))
+}
+
+func lastRead(channel *slack.Channel) time.Time {
+	if channel != nil {
+		lastRead, _ := toTime(channel.LastRead)
+		return lastRead
+	}
+	return time.Now()
 }

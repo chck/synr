@@ -12,8 +12,9 @@ import (
 )
 
 type options struct {
-	ChatName string `short:"c" long:"chatname" description:"A name of chat you'd like to brake up"`
-	DryRun   bool   `short:"d" long:"dry-run" description:"Pre-running break up unnessesary chat rooms"`
+	ChatName    string `short:"c" long:"chatname" description:"A name of chat you'd like to brake up"`
+	DryRun      bool   `short:"d" long:"dry-run" description:"Pre-running break up unnessesary chat rooms"`
+	BeforeMonth int    `short:"m" long:"before-month" description:"Set X month elapsed when Last of talking date to break up: DEFAULT 1 MONTH AGO"`
 }
 
 func cmdOpts() *options {
@@ -44,7 +45,7 @@ func main() {
 		channels, _ := client.GetChannels(false)
 		starredIDs := slack.StarredChannelIDs(client)
 		for _, channel := range channels {
-			slack.MayBeLeaveChannel(opts.DryRun, client, channel, starredIDs)
+			slack.MayBeLeaveChannel(opts.DryRun, opts.BeforeMonth, client, channel, starredIDs)
 		}
 	}
 	fmt.Println("++++++++++++++++++++++++")
