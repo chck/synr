@@ -1,5 +1,5 @@
 # break-upper
-> A matchmaker to clean chats' unnecessary channels
+> A cleaner of chats' unnecessary channels
 
 ## Requirements
 ```
