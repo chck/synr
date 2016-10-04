@@ -34,13 +34,15 @@ func StarredChannelIDs(client *slack.Client) []string {
 	return stars
 }
 
-func MayBeLeaveChannel(client *slack.Client, channel slack.Channel, starredIDs []string) {
+func MayBeLeaveChannel(canDryRun bool, client *slack.Client, channel slack.Channel, starredIDs []string) {
 	if channel.IsMember {
 		channelInfo, _ := client.GetChannelInfo(channel.ID)
 		canLeave := canLeave(channelInfo, starredIDs)
 		if canLeave {
 			fmt.Println(channel.Name, LastRead(channelInfo), canLeave)
-			client.LeaveChannel(channel.ID)
+			if !canDryRun {
+				client.LeaveChannel(channel.ID)
+			}
 		}
 	}
 }
