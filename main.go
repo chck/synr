@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/chck/break-upper/chatwork"
 	"github.com/chck/break-upper/slack"
 
 	"github.com/chck/break-upper/config"
@@ -38,8 +37,6 @@ func main() {
 	opts := cmdOpts()
 
 	switch opts.ChatName {
-	case "chatwork":
-		chatwork.New(tokens.Chatwork)
 	case "slack":
 		client := slack.New(tokens.Slack)
 		channels, _ := client.GetChannels(false)
