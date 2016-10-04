@@ -17,6 +17,12 @@ glide up
 # Build one binary
 go build
 
-# Run
-./break-upper -c slack
+# Show usage with options
+./break-upper help
+
+# Dry-run
+./break-upper -c slack -d
+
+# Run with selected months elapsed from last update (default: 1)
+./break-upper -c slack -m 3
 ```
