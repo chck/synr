@@ -13,24 +13,6 @@ func New(token string) *slack.Client {
 	return slack.New(token)
 }
 
-// condition of leaving channel
-// 1. last of talking date is more than 1 month elapsed
-// 2. however this shall not apply when its channel is added star
-func CanLeave(channel *slack.Channel, starredIDs []string) bool {
-	lastRead := LastRead(channel)
-
-	switch {
-	case channel == nil:
-		return false
-	case includes(channel.ID, starredIDs):
-		return false
-	case lastRead.Before(time.Now().AddDate(0, -1, 0)):
-		return true
-	default:
-		return false
-	}
-}
-
 func LastRead(channel *slack.Channel) time.Time {
 	if channel != nil {
 		lastRead, _ := toTime(channel.LastRead)
@@ -55,11 +37,29 @@ func StarredChannelIDs(client *slack.Client) []string {
 func MayBeLeaveChannel(client *slack.Client, channel slack.Channel, starredIDs []string) {
 	if channel.IsMember {
 		channelInfo, _ := client.GetChannelInfo(channel.ID)
-		canLeave := CanLeave(channelInfo, starredIDs)
+		canLeave := canLeave(channelInfo, starredIDs)
 		if canLeave {
 			fmt.Println(channel.Name, LastRead(channelInfo), canLeave)
 			client.LeaveChannel(channel.ID)
 		}
+	}
+}
+
+// condition of leaving channel
+// 1. last of talking date is more than 1 month elapsed
+// 2. however this shall not apply when its channel is added star
+func canLeave(channel *slack.Channel, starredIDs []string) bool {
+	lastRead := LastRead(channel)
+
+	switch {
+	case channel == nil:
+		return false
+	case includes(channel.ID, starredIDs):
+		return false
+	case lastRead.Before(time.Now().AddDate(0, -1, 0)):
+		return true
+	default:
+		return false
 	}
 }
 

@@ -15,7 +15,7 @@ type options struct {
 	ChatName string `short:"c" long:"chatname" description:"A name of chat you'd like to brake up"`
 }
 
-func chatName() string {
+func cmdOpts() *options {
 	opts := &options{}
 	parser := flags.NewParser(opts, flags.PrintErrors)
 	parser.Name = "break-upper"
@@ -27,13 +27,13 @@ func chatName() string {
 		os.Exit(1)
 	}
 
-	return opts.ChatName
+	return opts
 }
 
 func main() {
 	tokens := config.Load().Tokens
 
-	switch chatName() {
+	switch cmdOpts().ChatName {
 	case "chatwork":
 		chatwork.New(tokens.Chatwork)
 	case "slack":
