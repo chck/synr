@@ -13,6 +13,7 @@ import (
 
 type options struct {
 	ChatName string `short:"c" long:"chatname" description:"A name of chat you'd like to brake up"`
+	DryRun   bool   `short:"d" long:"dry-run" description:"Pre-running break up unnessesary chat rooms"`
 }
 
 func cmdOpts() *options {
@@ -33,7 +34,9 @@ func cmdOpts() *options {
 func main() {
 	tokens := config.Load().Tokens
 
-	switch cmdOpts().ChatName {
+	opts := cmdOpts()
+
+	switch opts.ChatName {
 	case "chatwork":
 		chatwork.New(tokens.Chatwork)
 	case "slack":
@@ -41,7 +44,7 @@ func main() {
 		channels, _ := client.GetChannels(false)
 		starredIDs := slack.StarredChannelIDs(client)
 		for _, channel := range channels {
-			slack.MayBeLeaveChannel(client, channel, starredIDs)
+			slack.MayBeLeaveChannel(opts.DryRun, client, channel, starredIDs)
 		}
 	}
 	fmt.Println("++++++++++++++++++++++++")
