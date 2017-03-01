@@ -3,7 +3,7 @@
 
 ## Requirements
 ```bash
-% go 1.7.0
+% go 1.8.0
 % glide 0.11.1
 ```
 
