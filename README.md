@@ -2,20 +2,21 @@
 > A cleaner of chats' unnecessary channels
 
 ## Requirements
-```
-go 1.7.0
-glide 0.11.1
+```bash
+% go 1.7.0
+% glide 0.11.1
 ```
 
 ## Installation
-```
-glide up
+   Installation
+```bash
+% glide up
 ```
 
 ## Setup
-```
+```bash
 # Build one binary
-go build
+% go build
 
 # Set tokens in config/secrets.yaml
 - slack: https://api.slack.com/docs/oauth-test-tokens
@@ -23,16 +24,16 @@ go build
 ```
 
 ## Usage
-```
+```bash
 # Show usage with options
-./break-upper help
+% break-upper help
 
 # Dry-run
-./break-upper -c slack -d
+% break-upper -c slack -d
 
 # Run
-./break-upper -c slack
+% break-upper -c slack
 
 # Run with selected months elapsed from last update (default: 1)
-./break-upper -c slack -m 3
+% break-upper -c slack -m 3
 ```
