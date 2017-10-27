@@ -43,7 +43,6 @@ func MayBeLeaveChannel(canDryRun bool, beforeMonth int, client *slack.Client, ch
 // 1. last of talking date is more than X month elapsed
 // 2. however this shall not apply when its channel is added star
 func canLeave(channel *slack.Channel, starredIDs []string, beforeMonth int) bool {
-
 	switch {
 	case channel == nil:
 		return false
