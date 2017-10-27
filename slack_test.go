@@ -3,7 +3,7 @@ package main_test
 import (
 	"fmt"
 
-	"github.com/chck/break-upper/config"
+	"github.com/chck/synr/config"
 	"github.com/nlopes/slack"
 
 	. "github.com/onsi/ginkgo"

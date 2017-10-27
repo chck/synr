@@ -4,23 +4,23 @@ import (
 	"log"
 	"os"
 
-	"github.com/chck/break-upper/chatwork"
-	"github.com/chck/break-upper/slack"
+	"github.com/chck/synr/chatwork"
+	"github.com/chck/synr/slack"
 
-	"github.com/chck/break-upper/config"
+	"github.com/chck/synr/config"
 	flags "github.com/jessevdk/go-flags"
 )
 
 type options struct {
 	ChatName    string `short:"c" long:"chatname" description:"A name of chat you'd like to brake up"`
-	DryRun      bool   `short:"d" long:"dry-run" description:"Pre-running break up unnessesary chat rooms"`
-	BeforeMonth int    `short:"m" long:"before-month" description:"Set X month elapsed when Last of talking date to break up: DEFAULT 1 MONTH AGO"`
+	DryRun      bool   `short:"d" long:"dry-run" description:"Pre-running to leave unnessesary chat rooms"`
+	BeforeMonth int    `short:"m" long:"before-month" description:"Set X month elapsed when Last of talking date to leave: DEFAULT 1 MONTH AGO"`
 }
 
 func cmdOpts() *options {
 	opts := &options{}
 	parser := flags.NewParser(opts, flags.PrintErrors)
-	parser.Name = "break-upper"
+	parser.Name = "synr"
 	parser.Usage = "-c slack"
 	args, _ := parser.Parse()
 

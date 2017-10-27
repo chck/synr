@@ -7,7 +7,7 @@ import (
 	"testing"
 )
 
-func TestBreakUpper(t *testing.T) {
+func TestSynr(t *testing.T) {
 	RegisterFailHandler(Fail)
-	RunSpecs(t, "BreakUpper Suite")
+	RunSpecs(t, "Synr Suite")
 }

@@ -1,10 +1,10 @@
-# break-upper
-> A cleaner of chats' unnecessary channels
+# synr
+> A script that leaving from your unnecessary chat rooms
 
 ## Requirements
 ```bash
-% go 1.8.0
-% glide 0.11.1
+% go 1.9.2
+% glide 0.13.0
 ```
 
 ## Installation
@@ -26,14 +26,14 @@
 ## Usage
 ```bash
 # Show usage with options
-% break-upper help
+% synr help
 
 # Dry-run
-% break-upper -c slack -d
+% synr -c slack -d
 
 # Run
-% break-upper -c slack
+% synr -c slack
 
 # Run with selected months elapsed from last update (default: 1)
-% break-upper -c slack -m 3
+% synr -c slack -m 3
 ```

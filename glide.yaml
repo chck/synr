@@ -1,4 +1,4 @@
-package: github.com/chck/break-upper
+package: github.com/chck/synr
 import:
   - package: github.com/jessevdk/go-flags
   - package: github.com/onsi/ginkgo
