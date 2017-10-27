@@ -26,14 +26,17 @@
 ## Usage
 ```bash
 # Show usage with options
-% synr help
+% ./synr help
 
 # Dry-run
-% synr -c slack -d
+% ./synr -c slack -d
 
 # Run
-% synr -c slack
+% ./synr -c slack
 
 # Run with selected months elapsed from last update (default: 1)
-% synr -c slack -m 3
+% ./synr -c slack -m 3
+
+# Supported chats are slack and chatwork
+% ./synr -c chatwork -m 3
 ```
