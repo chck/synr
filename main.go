@@ -1,7 +1,7 @@
 package main
 
 import (
-	"fmt"
+	"log"
 	"os"
 
 	"github.com/chck/break-upper/chatwork"
@@ -33,8 +33,8 @@ func cmdOpts() *options {
 }
 
 func main() {
-	fmt.Println("Start breaking!!")
-	fmt.Println("++++++++++++++++++++++++")
+	log.Println("Erase your past glory...")
+	log.Println("++++++++++++++++++++++++")
 	tokens := config.Load().Tokens
 
 	opts := cmdOpts()
@@ -54,6 +54,6 @@ func main() {
 			slack.MayBeLeaveChannel(opts.DryRun, opts.BeforeMonth, client, channel, starredIDs)
 		}
 	}
-	fmt.Println("++++++++++++++++++++++++")
-	fmt.Println("Broken up!!")
+	log.Println("++++++++++++++++++++++++")
+	log.Println("Done!!")
 }
