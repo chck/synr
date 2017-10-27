@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/chck/break-upper/chatwork"
 	"github.com/chck/break-upper/slack"
 
 	"github.com/chck/break-upper/config"
@@ -32,11 +33,19 @@ func cmdOpts() *options {
 }
 
 func main() {
+	fmt.Println("Start breaking!!")
+	fmt.Println("++++++++++++++++++++++++")
 	tokens := config.Load().Tokens
 
 	opts := cmdOpts()
 
 	switch opts.ChatName {
+	case "chatwork":
+		client := chatwork.New(tokens.Chatwork)
+		rooms, _ := client.GetRooms()
+		for _, room := range rooms {
+			chatwork.MayBeLeaveRoom(opts.DryRun, opts.BeforeMonth, client, &room)
+		}
 	case "slack":
 		client := slack.New(tokens.Slack)
 		channels, _ := client.GetChannels(false)
