@@ -12,7 +12,7 @@ import (
 )
 
 type options struct {
-	ChatName    string `short:"c" long:"chatname" description:"A name of chat you'd like to brake up"`
+	ChatName    string `short:"c" long:"chatname" description:"A chat name you'd like to leave"`
 	DryRun      bool   `short:"d" long:"dry-run" description:"Pre-running to leave unnessesary chat rooms"`
 	BeforeMonth int    `short:"m" long:"before-month" description:"Set X month elapsed when Last of talking date to leave: DEFAULT 1 MONTH AGO"`
 }
