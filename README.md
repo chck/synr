@@ -8,7 +8,6 @@
 ```
 
 ## Installation
-   Installation
 ```bash
 % glide up
 ```
