@@ -15,9 +15,14 @@
 ## Setup
 ```bash
 # Set tokens in config/secrets.yaml
-- slack: https://api.slack.com/docs/oauth-test-tokens
-- chatwork: http://developer.chatwork.com/ja/authenticate.html
-
+# slack: https://api.slack.com/docs/oauth-test-tokens
+# chatwork: http://developer.chatwork.com/ja/authenticate.html
+vi config/secrets.yaml
+---
+tokens:
+  chatwork: YOUR_CHARWORK_TOKEN
+  slack: YOUR_SLACK_TOKEN
+  
 # Build one binary
 % go build
 ```
