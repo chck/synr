@@ -1,0 +1,12 @@
+github.com/jessevdk/go-flags v0.0.0-20170926144705-f88afde2fa19 h1:k9/LaykApavRKKlaWkunBd48Um+vMxnUNNsIjS7OJn8=
+github.com/jessevdk/go-flags v0.0.0-20170926144705-f88afde2fa19/go.mod h1:4FA24M0QyGHXBuZZK/XkWh8h0e1EYbRYJSGM75WSRxI=
+github.com/nlopes/slack v0.0.0-20170725121730-5cde21b8b96a h1:ln3NXCJJdiiEF8Jmy1HWmeUUeglYlKCeoCLck5OpD08=
+github.com/nlopes/slack v0.0.0-20170725121730-5cde21b8b96a/go.mod h1:jVI4BBK3lSktibKahxBF74txcK2vyvkza1z/+rRnVAM=
+github.com/onsi/ginkgo v0.0.0-20170829012221-11459a886d9c/go.mod h1:lLunBs/Ym6LB5Z9jYTR76FiuTmxDTDusOGeTQH+WWjE=
+github.com/onsi/gomega v0.0.0-20171012021143-283ed655c6b8/go.mod h1:C1qb7wdrVGGVU+Z6iS04AVkA3Q65CEZX59MT0QO5uiA=
+golang.org/x/net v0.0.0-20171027103834-c73622c77280 h1:TFSo8RGq2v9crRl/RW0EH71y1kdSjqeCxljzuDsD+oA=
+golang.org/x/net v0.0.0-20171027103834-c73622c77280/go.mod h1:mL1N/T3taQHkDXs73rZJwtUhF3w3ftmwwsq0BUmARs4=
+golang.org/x/sys v0.0.0-20171027071755-0649f9fe46d9/go.mod h1:STP8DvDyc/dI5b8T5hshtkjS+E42TnysNCUPdjciGhY=
+golang.org/x/text v0.0.0-20171024115504-6eab0e8f74e8/go.mod h1:NqM8EUOU14njkJ3fqMW+pc6Ldnwhi/IjpwHt7yyuwOQ=
+gopkg.in/yaml.v2 v2.0.0-20170812160011-eb3733d160e7 h1:+t9dhfO+GNOIGJof6kPOAenx7YgrZMTdRPV+EsnPabk=
+gopkg.in/yaml.v2 v2.0.0-20170812160011-eb3733d160e7/go.mod h1:JAlM8MvJe8wmxCU4Bli9HhUf9+ttbYbLASfIpnQbh74=
