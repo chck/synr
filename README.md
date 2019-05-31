@@ -3,13 +3,12 @@
 
 ## Requirements
 ```bash
-% go 1.9.2
-% glide 0.13.0
+go==1.12.*
 ```
 
 ## Installation
 ```bash
-% glide up
+% go get -u github.com/chck/synr
 ```
 
 ## Setup
@@ -22,25 +21,22 @@ vi config/secrets.yaml
 tokens:
   chatwork: YOUR_CHARWORK_TOKEN
   slack: YOUR_SLACK_TOKEN
-  
-# Build one binary
-% go build
 ```
 
 ## Usage
 ```bash
 # Show usage with options
-% ./synr help
+% synr help
 
 # Dry-run
-% ./synr -c slack -d
+% synr -c slack -d
 
 # Run
-% ./synr -c slack
+% synr -c slack
 
 # Run with selected months elapsed from last update (default: 1)
-% ./synr -c slack -m 3
+% synr -c slack -m 3
 
 # Supported chats are slack and chatwork
-% ./synr -c chatwork -m 3
+% synr -c chatwork -m 3
 ```
