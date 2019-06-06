@@ -20,6 +20,3 @@ vendor/
 
 # vscode
 .vscode/
-
-# Travis CI
-.netrc
