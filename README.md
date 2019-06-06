@@ -1,5 +1,6 @@
-# synr
-> A script that leaving from your unnecessary chat rooms
+# synr: A script that leaving from your unnecessary chat rooms
+[![Build Status](https://travis-ci.com/chck/synr.svg?branch=master)](https://travis-ci.com/chck/synr)
+[![license](https://img.shields.io/github/license/mashape/apistatus.svg?maxAge=2592000)](https://github.com/chck/synr/blob/master/LICENSE)
 
 ## Requirements
 ```bash

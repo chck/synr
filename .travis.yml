@@ -1,0 +1,18 @@
+language: go
+
+go:
+- '1.12.x'
+
+before_install:
+- cp .netrc ~/.netrc
+- chmod 600 ~/.netrc
+
+script:
+- go test
+
+deploy:
+- provider: script
+  skip_cleanup: true
+  script: curl -sL http://git.io/goreleaser | bash
+  on:
+    tags: true
