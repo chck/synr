@@ -244,6 +244,9 @@ func (subscription subscription) validate() error {
 	if subscription.StreamID == nil {
 		return fmt.Errorf("Zulip subscription is missing stream_id")
 	}
+	if *subscription.StreamID <= 0 {
+		return fmt.Errorf("Zulip subscription stream_id must be positive")
+	}
 	if subscription.Name == nil || *subscription.Name == "" {
 		return fmt.Errorf("Zulip subscription %d is missing name", *subscription.StreamID)
 	}

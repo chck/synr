@@ -163,6 +163,33 @@ func TestListFailsClosedForIncompleteActivityResponse(t *testing.T) {
 	}
 }
 
+func TestListRejectsNonPositiveStreamID(t *testing.T) {
+	for _, streamID := range []int64{0, -1} {
+		t.Run(fmt.Sprintf("stream ID %d", streamID), func(t *testing.T) {
+			server := httptest.NewServer(http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
+				switch request.URL.Path {
+				case "/api/v1/users/me/subscriptions":
+					writeJSON(t, writer, fmt.Sprintf(`{"result":"success","subscriptions":[{"stream_id":%d,"name":"Invalid","pin_to_top":false}]}`, streamID))
+				case "/api/v1/messages":
+					requestedChannel(t, request)
+					writeJSON(t, writer, `{"result":"success","messages":[{"timestamp":1710000000}]}`)
+				default:
+					writer.WriteHeader(http.StatusNotFound)
+				}
+			}))
+			defer server.Close()
+
+			conversations, err := newTestClient(t, server).List(context.Background())
+			if err == nil {
+				t.Fatal("List() error = nil, want invalid stream ID error")
+			}
+			if conversations != nil {
+				t.Errorf("List() conversations = %v, want no partial data", conversations)
+			}
+		})
+	}
+}
+
 func TestLeaveSendsEncodedChannelName(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
 		if request.Method != http.MethodDelete {
