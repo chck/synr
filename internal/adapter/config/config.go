@@ -36,7 +36,7 @@ type servicesConfig struct {
 }
 
 type serviceConfig struct {
-	ProtectedChannels []string `yaml:"protected_channels"`
+	ProtectedChannels yaml.Node `yaml:"protected_channels"`
 }
 
 func Load(path string) (Config, error) {
@@ -122,11 +122,11 @@ func defaultPath() (string, error) {
 	if configHome := os.Getenv("XDG_CONFIG_HOME"); configHome != "" {
 		return filepath.Join(configHome, applicationName, "config.yaml"), nil
 	}
-	configHome, err := os.UserConfigDir()
+	home, err := os.UserHomeDir()
 	if err != nil {
-		return "", fmt.Errorf("resolve user configuration directory: %w", err)
+		return "", fmt.Errorf("resolve user home directory for configuration: %w", err)
 	}
-	return filepath.Join(configHome, applicationName, "config.yaml"), nil
+	return filepath.Join(home, ".config", applicationName, "config.yaml"), nil
 }
 
 func rejectAdditionalDocument(decoder *yaml.Decoder) error {
@@ -164,10 +164,16 @@ func newConfig(file fileConfig) (Config, error) {
 	return config, nil
 }
 
-func protectedIDs(service domain.Service, values []string) (map[domain.ConversationID]struct{}, error) {
-	protected := make(map[domain.ConversationID]struct{}, len(values))
-	for _, value := range values {
-		id := strings.TrimSpace(value)
+func protectedIDs(service domain.Service, values yaml.Node) (map[domain.ConversationID]struct{}, error) {
+	if values.Kind != 0 && values.Kind != yaml.SequenceNode {
+		return nil, fmt.Errorf("protected_channels for %q must be a list of non-empty strings", service)
+	}
+	protected := make(map[domain.ConversationID]struct{}, len(values.Content))
+	for _, value := range values.Content {
+		if value.Kind != yaml.ScalarNode || value.ShortTag() != "!!str" {
+			return nil, fmt.Errorf("protected channel ID for %q must be a non-empty string; quote numeric IDs", service)
+		}
+		id := strings.TrimSpace(value.Value)
 		if id == "" {
 			return nil, fmt.Errorf("protected channel ID for %q must not be blank", service)
 		}

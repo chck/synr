@@ -168,11 +168,17 @@ func (room room) conversation() (domain.Conversation, error) {
 	}
 
 	protection := domain.ProtectionNone
-	switch {
-	case *room.Type == "direct":
+	switch *room.Type {
+	case "direct":
 		protection = domain.ProtectionDirect
-	case *room.Sticky:
-		protection = domain.ProtectionSticky
+	case "my":
+		protection = domain.ProtectionMy
+	case "group":
+		if *room.Sticky {
+			protection = domain.ProtectionSticky
+		}
+	default:
+		return domain.Conversation{}, fmt.Errorf("Chatwork room %d has unsupported type %q; only group rooms can be left", *room.ID, *room.Type)
 	}
 
 	conversation, err := domain.NewConversation(

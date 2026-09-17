@@ -48,6 +48,9 @@ func (client *Client) List(ctx context.Context) ([]domain.Conversation, error) {
 		if err != nil {
 			return nil, fmt.Errorf("list Slack conversations: %w", err)
 		}
+		if channels == nil {
+			return nil, fmt.Errorf("list Slack conversations: response is missing a channels array")
+		}
 
 		for _, channel := range channels {
 			if !channel.IsMember {
@@ -59,7 +62,22 @@ func (client *Client) List(ctx context.Context) ([]domain.Conversation, error) {
 				return nil, fmt.Errorf("get Slack conversation %q info: %w", channel.ID, err)
 			}
 
-			conversation, err := conversationFromChannel(*info)
+			history, err := client.api.GetConversationHistoryContext(ctx, &slackapi.GetConversationHistoryParameters{
+				ChannelID: channel.ID,
+				Limit:     1,
+			})
+			if err != nil {
+				return nil, fmt.Errorf("get Slack conversation %q history: %w", channel.ID, err)
+			}
+			if history.Messages == nil {
+				return nil, fmt.Errorf("get Slack conversation %q history: response is missing a messages array", channel.ID)
+			}
+			activity := domain.UnknownActivity()
+			if len(history.Messages) > 0 {
+				activity = activityFromTimestamp(history.Messages[0].Timestamp)
+			}
+
+			conversation, err := conversationFromChannel(*info, activity)
 			if err != nil {
 				return nil, err
 			}
@@ -90,8 +108,7 @@ func (client *Client) Leave(ctx context.Context, conversation domain.Conversatio
 	return fmt.Errorf("leave Slack conversation %q: %w", conversation.ID().Value(), err)
 }
 
-func conversationFromChannel(channel slackapi.Channel) (domain.Conversation, error) {
-	activity := activityFromLastRead(channel.LastRead)
+func conversationFromChannel(channel slackapi.Channel, activity domain.Activity) (domain.Conversation, error) {
 	protection := domain.ProtectionNone
 	if channel.IsGeneral {
 		protection = domain.ProtectionGeneral
@@ -104,12 +121,12 @@ func conversationFromChannel(channel slackapi.Channel) (domain.Conversation, err
 	return conversation, nil
 }
 
-func activityFromLastRead(lastRead string) domain.Activity {
-	if !slackTimestampPattern.MatchString(lastRead) {
+func activityFromTimestamp(timestamp string) domain.Activity {
+	if !slackTimestampPattern.MatchString(timestamp) {
 		return domain.UnknownActivity()
 	}
 
-	seconds, err := strconv.ParseInt(strings.SplitN(lastRead, ".", 2)[0], 10, 64)
+	seconds, err := strconv.ParseInt(strings.SplitN(timestamp, ".", 2)[0], 10, 64)
 	if err != nil || seconds <= 0 {
 		return domain.UnknownActivity()
 	}

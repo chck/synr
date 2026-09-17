@@ -12,6 +12,7 @@ const (
 	ProtectionGeneral Protection = "general"
 	ProtectionSticky  Protection = "sticky"
 	ProtectionDirect  Protection = "direct"
+	ProtectionMy      Protection = "my"
 	ProtectionPinned  Protection = "pinned"
 )
 
@@ -104,7 +105,7 @@ func (conversation Conversation) Protection() Protection {
 
 func isSupportedProtection(protection Protection) bool {
 	switch protection {
-	case ProtectionNone, ProtectionGeneral, ProtectionSticky, ProtectionDirect, ProtectionPinned:
+	case ProtectionNone, ProtectionGeneral, ProtectionSticky, ProtectionDirect, ProtectionMy, ProtectionPinned:
 		return true
 	default:
 		return false

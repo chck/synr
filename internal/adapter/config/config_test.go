@@ -110,6 +110,40 @@ func TestLoadRejectsBlankProtectedID(t *testing.T) {
 	}
 }
 
+func TestLoadRejectsNonStringProtectedIDs(t *testing.T) {
+	for _, test := range []struct {
+		name  string
+		value string
+	}{
+		{name: "null", value: "[null]"},
+		{name: "empty list item", value: "\n      -"},
+		{name: "boolean", value: "[true]"},
+		{name: "number", value: "[123]"},
+		{name: "null list", value: "null"},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			_, err := Load(writeConfig(t, "services:\n  chatwork:\n    protected_channels: "+test.value+"\n"))
+			if err == nil || !strings.Contains(err.Error(), "protected") {
+				t.Fatalf("Load() error = %v, want invalid protected ID error", err)
+			}
+		})
+	}
+}
+
+func TestLoadPreservesQuotedProtectedIDs(t *testing.T) {
+	configuration, err := Load(writeConfig(t, "services:\n  chatwork:\n    protected_channels: ['00123', 'true', 'null']\n"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	want := map[domain.ConversationID]struct{}{}
+	for _, id := range []string{"00123", "true", "null"} {
+		want[conversationID(t, domain.ServiceChatwork, id)] = struct{}{}
+	}
+	if got := configuration.ProtectedIDs(domain.ServiceChatwork); !reflect.DeepEqual(got, want) {
+		t.Fatalf("ProtectedIDs() = %v, want %v", got, want)
+	}
+}
+
 func TestDefaultPathUsesXDGConfigHome(t *testing.T) {
 	xdgConfigHome := t.TempDir()
 	t.Setenv("XDG_CONFIG_HOME", xdgConfigHome)
@@ -127,6 +161,29 @@ func TestDefaultPathUsesXDGConfigHome(t *testing.T) {
 	}
 	if _, ok := config.ProtectedIDs(domain.ServiceSlack)[conversationID(t, domain.ServiceSlack, "C123")]; !ok {
 		t.Error("Load(\"\") did not read the XDG configuration path")
+	}
+}
+
+func TestDefaultPathUsesHomeDotConfigWithoutXDG(t *testing.T) {
+	home := t.TempDir()
+	t.Setenv("HOME", home)
+	t.Setenv("USERPROFILE", home)
+	t.Setenv("APPDATA", t.TempDir())
+	t.Setenv("XDG_CONFIG_HOME", "")
+	path := filepath.Join(home, ".config", "synr", "config.yaml")
+	if err := os.MkdirAll(filepath.Dir(path), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(path, []byte("services:\n  slack:\n    protected_channels: [C123]\n"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+
+	configuration, err := Load("")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, ok := configuration.ProtectedIDs(domain.ServiceSlack)[conversationID(t, domain.ServiceSlack, "C123")]; !ok {
+		t.Fatal("Load did not read $HOME/.config/synr/config.yaml with XDG_CONFIG_HOME unset")
 	}
 }
 
