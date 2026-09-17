@@ -20,6 +20,10 @@ args = ["test", "-race", "./..."]
 command = "go"
 args = ["test", "./internal/adapter/config", "-v"]
 
+[tasks.test-chatwork]
+command = "go"
+args = ["test", "./internal/adapter/chatwork", "-v"]
+
 [tasks.build]
 command = "go"
 args = ["build", "./..."]
