@@ -62,7 +62,7 @@ args = ["build", "./..."]
 
 [tasks.vuln]
 command = "go"
-args = ["run", "golang.org/x/vuln/cmd/govulncheck@v1.1.4", "./..."]
+args = ["run", "golang.org/x/vuln/cmd/govulncheck@v1.8.0", "./..."]
 
 [tasks.goreleaser-check]
 script = '''
