@@ -28,6 +28,14 @@ args = ["test", "./internal/adapter/chatwork", "-v"]
 command = "go"
 args = ["test", "./internal/adapter/zulip", "-v"]
 
+[tasks.test-slack]
+command = "go"
+args = ["test", "./internal/adapter/slack", "-v"]
+
+[tasks.tidy]
+command = "go"
+args = ["mod", "tidy"]
+
 [tasks.build]
 command = "go"
 args = ["build", "./..."]
