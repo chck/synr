@@ -89,14 +89,14 @@ Each service adapter implements a small provider interface:
 ```go
 type Provider interface {
 	List(context.Context) ([]domain.Conversation, error)
-	Leave(context.Context, domain.ConversationID) error
+	Leave(context.Context, domain.Conversation) error
 }
 ```
 
 `List` returns all information needed for a decision. It never silently drops a
 page, malformed item, unsupported state, or API error. `Leave` performs one
-idempotent-as-supported upstream operation and reports the conversation ID in
-its error context.
+idempotent-as-supported upstream operation using the provider-specific stable
+identifier or name and reports the conversation ID in its error context.
 
 The use case evaluates every returned conversation against one cutoff time and
 the protected-ID set. Presentation code parses arguments, selects an adapter,
