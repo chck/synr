@@ -32,6 +32,14 @@ args = ["test", "./internal/adapter/zulip", "-v"]
 command = "go"
 args = ["test", "./internal/adapter/slack", "-v"]
 
+[tasks.test-cli]
+command = "go"
+args = ["test", "./internal/presentation/cli", "-v"]
+
+[tasks.cli-help]
+command = "go"
+args = ["run", "./cmd/synr", "--help"]
+
 [tasks.tidy]
 command = "go"
 args = ["mod", "tidy"]

@@ -34,7 +34,7 @@ func TestLoadRejectsUnknownYAMLKey(t *testing.T) {
 }
 
 func TestLoadRejectsAdditionalYAMLDocument(t *testing.T) {
-	path := writeConfig(t, "slack: {}\n---\nchatwork: {}\n")
+	path := writeConfig(t, "services:\n  slack: {}\n---\nservices:\n  chatwork: {}\n")
 
 	_, err := Load(path)
 	if err == nil {
@@ -46,7 +46,7 @@ func TestLoadRejectsAdditionalYAMLDocument(t *testing.T) {
 }
 
 func TestLoadReturnsProtectedIDsByService(t *testing.T) {
-	path := writeConfig(t, "slack:\n  protected_channels:\n    - C123\nchatwork:\n  protected_channels:\n    - room-456\nzulip:\n  protected_channels:\n    - stream-789\n")
+	path := writeConfig(t, "services:\n  slack:\n    protected_channels:\n      - C123\n  chatwork:\n    protected_channels:\n      - room-456\n  zulip:\n    protected_channels:\n      - stream-789\n")
 
 	config, err := Load(path)
 	if err != nil {
@@ -70,7 +70,7 @@ func TestLoadReturnsProtectedIDsByService(t *testing.T) {
 }
 
 func TestLoadRejectsBlankProtectedID(t *testing.T) {
-	path := writeConfig(t, "slack:\n  protected_channels:\n    - '   '\n")
+	path := writeConfig(t, "services:\n  slack:\n    protected_channels:\n      - '   '\n")
 
 	_, err := Load(path)
 	if err == nil {
@@ -88,7 +88,7 @@ func TestDefaultPathUsesXDGConfigHome(t *testing.T) {
 	if err := os.MkdirAll(filepath.Dir(path), 0o755); err != nil {
 		t.Fatal(err)
 	}
-	if err := os.WriteFile(path, []byte("slack:\n  protected_channels:\n    - C123\n"), 0o600); err != nil {
+	if err := os.WriteFile(path, []byte("services:\n  slack:\n    protected_channels:\n      - C123\n"), 0o600); err != nil {
 		t.Fatal(err)
 	}
 
@@ -119,6 +119,26 @@ func TestCredentialsForLoadsOnlySelectedService(t *testing.T) {
 	}
 	if !reflect.DeepEqual(lookups, []string{"SYNR_SLACK_TOKEN"}) {
 		t.Errorf("credential lookups = %v, want only SYNR_SLACK_TOKEN", lookups)
+	}
+}
+
+func TestLoadRejectsServicesOutsideWrapper(t *testing.T) {
+	for _, service := range []string{"slack", "chatwork", "zulip"} {
+		t.Run(service, func(t *testing.T) {
+			_, err := Load(writeConfig(t, service+": {}\n"))
+			if err == nil {
+				t.Fatal("Load accepted a service outside the services wrapper")
+			}
+		})
+	}
+}
+
+func TestLoadRejectsUnknownNestedKeys(t *testing.T) {
+	for _, content := range []string{"services:\n  discord: {}\n", "services:\n  slack:\n    unknown: true\n"} {
+		_, err := Load(writeConfig(t, content))
+		if err == nil {
+			t.Fatalf("Load accepted unknown nested key: %s", content)
+		}
 	}
 }
 

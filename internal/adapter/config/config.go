@@ -26,6 +26,10 @@ type Config struct {
 }
 
 type fileConfig struct {
+	Services servicesConfig `yaml:"services"`
+}
+
+type servicesConfig struct {
 	Slack    serviceConfig `yaml:"slack"`
 	Chatwork serviceConfig `yaml:"chatwork"`
 	Zulip    serviceConfig `yaml:"zulip"`
@@ -144,9 +148,9 @@ func newConfig(file fileConfig) (Config, error) {
 		name       domain.Service
 		configured serviceConfig
 	}{
-		{name: domain.ServiceSlack, configured: file.Slack},
-		{name: domain.ServiceChatwork, configured: file.Chatwork},
-		{name: domain.ServiceZulip, configured: file.Zulip},
+		{name: domain.ServiceSlack, configured: file.Services.Slack},
+		{name: domain.ServiceChatwork, configured: file.Services.Chatwork},
+		{name: domain.ServiceZulip, configured: file.Services.Zulip},
 	} {
 		protected, err := protectedIDs(service.name, service.configured.ProtectedChannels)
 		if err != nil {
