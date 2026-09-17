@@ -1,0 +1,81 @@
+[tasks.fmt]
+command = "go"
+args = ["fmt", "./..."]
+
+[tasks.fmt-check]
+script = '''
+files="$(gofmt -l $(git ls-files '*.go'))"
+test -z "$files" || { echo "$files"; exit 1; }
+'''
+
+[tasks.vet]
+command = "go"
+args = ["vet", "./..."]
+
+[tasks.test]
+command = "go"
+args = ["test", "-race", "./..."]
+
+[tasks.test-config]
+command = "go"
+args = ["test", "./internal/adapter/config", "-v"]
+
+[tasks.test-chatwork]
+command = "go"
+args = ["test", "./internal/adapter/chatwork", "-v"]
+
+[tasks.test-zulip]
+command = "go"
+args = ["test", "./internal/adapter/zulip", "-v"]
+
+[tasks.test-slack]
+command = "go"
+args = ["test", "./internal/adapter/slack", "-v"]
+
+[tasks.test-cli]
+command = "go"
+args = ["test", "./internal/presentation/cli", "-v"]
+
+[tasks.cli-help]
+command = "go"
+args = ["run", "./cmd/synr", "--help"]
+
+[tasks.tidy]
+command = "go"
+args = ["mod", "tidy"]
+
+[tasks.modules]
+command = "go"
+args = ["list", "-m", "all"]
+
+[tasks.clean-testcache]
+command = "go"
+args = ["clean", "-testcache"]
+
+[tasks.test-preview-repeat]
+command = "go"
+args = ["test", "./internal/presentation/cli", "./internal/usecase", "-run", "Preview|DoesNotLeave|ListFails", "-count=20"]
+
+[tasks.build]
+command = "go"
+args = ["build", "./..."]
+
+[tasks.vuln]
+command = "go"
+args = ["run", "golang.org/x/vuln/cmd/govulncheck@v1.8.0", "./..."]
+
+[tasks.goreleaser-check]
+script = '''
+git_common_dir="$(git rev-parse --git-common-dir)"
+docker run --rm -v "$PWD:/src" -v "$git_common_dir:$git_common_dir:ro" -w /src goreleaser/goreleaser:v2.18.2 check
+'''
+
+[tasks.goreleaser-snapshot]
+script = '''
+git_common_dir="$(git rev-parse --git-common-dir)"
+docker run --rm -v "$PWD:/src" -v "$git_common_dir:$git_common_dir:ro" -w /src goreleaser/goreleaser:v2.18.2 release --snapshot --clean
+'''
+
+[tasks.check]
+dependencies = ["fmt-check", "vet", "test", "build", "vuln"]
+command = "true"
