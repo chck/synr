@@ -91,7 +91,7 @@ func TestListRejectsMalformedJSON(t *testing.T) {
 func TestListTreatsZeroTimestampAsUnknown(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
 		writer.Header().Set("Content-Type", "application/json")
-		_, _ = io.WriteString(writer, `[{"room_id": 105, "name": "empty", "type": "group", "last_update_time": 0}]`)
+		_, _ = io.WriteString(writer, `[{"room_id": 105, "name": "empty", "type": "group", "sticky": false, "last_update_time": 0}]`)
 	}))
 	defer server.Close()
 
@@ -104,6 +104,68 @@ func TestListTreatsZeroTimestampAsUnknown(t *testing.T) {
 	}
 	if conversations[0].Activity().Known() {
 		t.Error("activity is known, want unknown")
+	}
+}
+
+func TestListRejectsIncompleteRoomData(t *testing.T) {
+	for _, test := range []struct {
+		name string
+		body string
+	}{
+		{name: "room ID", body: `[{"name":"room","type":"group","sticky":false,"last_update_time":0}]`},
+		{name: "name", body: `[{"room_id":106,"type":"group","sticky":false,"last_update_time":0}]`},
+		{name: "type", body: `[{"room_id":106,"name":"room","sticky":false,"last_update_time":0}]`},
+		{name: "sticky", body: `[{"room_id":106,"name":"room","type":"group","last_update_time":0}]`},
+		{name: "last update time", body: `[{"room_id":106,"name":"room","type":"group","sticky":false}]`},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			server := httptest.NewServer(http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
+				writer.Header().Set("Content-Type", "application/json")
+				_, _ = io.WriteString(writer, test.body)
+			}))
+			defer server.Close()
+
+			_, err := newTestClient(t, server).List(context.Background())
+			if err == nil {
+				t.Fatal("List() error = nil, want incomplete room data error")
+			}
+		})
+	}
+}
+
+func TestListRejectsTrailingJSON(t *testing.T) {
+	for _, test := range []struct {
+		name string
+		body string
+	}{
+		{name: "malformed", body: `[] {`},
+		{name: "additional value", body: `[] []`},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			server := httptest.NewServer(http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
+				writer.Header().Set("Content-Type", "application/json")
+				_, _ = io.WriteString(writer, test.body)
+			}))
+			defer server.Close()
+
+			_, err := newTestClient(t, server).List(context.Background())
+			if err == nil {
+				t.Fatal("List() error = nil, want trailing JSON error")
+			}
+		})
+	}
+}
+
+func TestListRejectsNullJSON(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
+		writer.Header().Set("Content-Type", "application/json")
+		_, _ = io.WriteString(writer, `null`)
+	}))
+	defer server.Close()
+
+	_, err := newTestClient(t, server).List(context.Background())
+	if err == nil {
+		t.Fatal("List() error = nil, want null payload error")
 	}
 }
 

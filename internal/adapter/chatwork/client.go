@@ -3,6 +3,7 @@ package chatwork
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -23,11 +24,11 @@ type Client struct {
 }
 
 type room struct {
-	ID             int64  `json:"room_id"`
-	Name           string `json:"name"`
-	Type           string `json:"type"`
-	Sticky         bool   `json:"sticky"`
-	LastUpdateTime int64  `json:"last_update_time"`
+	ID             *int64  `json:"room_id"`
+	Name           *string `json:"name"`
+	Type           *string `json:"type"`
+	Sticky         *bool   `json:"sticky"`
+	LastUpdateTime *int64  `json:"last_update_time"`
 }
 
 func New(token string, baseURL *url.URL, httpClient *http.Client) (*Client, error) {
@@ -71,9 +72,19 @@ func (client *Client) List(ctx context.Context) ([]domain.Conversation, error) {
 		return nil, unexpectedStatus("list Chatwork rooms", response)
 	}
 
+	decoder := json.NewDecoder(response.Body)
 	var rooms []room
-	if err := json.NewDecoder(response.Body).Decode(&rooms); err != nil {
+	if err := decoder.Decode(&rooms); err != nil {
 		return nil, fmt.Errorf("decode Chatwork rooms: %w", err)
+	}
+	if rooms == nil {
+		return nil, fmt.Errorf("decode Chatwork rooms: response must be an array")
+	}
+	if err := decoder.Decode(&struct{}{}); !errors.Is(err, io.EOF) {
+		if err == nil {
+			return nil, fmt.Errorf("decode Chatwork rooms: unexpected additional JSON value")
+		}
+		return nil, fmt.Errorf("decode trailing Chatwork rooms data: %w", err)
 	}
 
 	conversations := make([]domain.Conversation, 0, len(rooms))
@@ -131,32 +142,48 @@ func (client *Client) roomEndpoint(id string) *url.URL {
 }
 
 func (room room) conversation() (domain.Conversation, error) {
+	if room.ID == nil {
+		return domain.Conversation{}, fmt.Errorf("Chatwork room is missing room_id")
+	}
+	if room.Name == nil {
+		return domain.Conversation{}, fmt.Errorf("Chatwork room %d is missing name", *room.ID)
+	}
+	if room.Type == nil {
+		return domain.Conversation{}, fmt.Errorf("Chatwork room %d is missing type", *room.ID)
+	}
+	if room.Sticky == nil {
+		return domain.Conversation{}, fmt.Errorf("Chatwork room %d is missing sticky", *room.ID)
+	}
+	if room.LastUpdateTime == nil {
+		return domain.Conversation{}, fmt.Errorf("Chatwork room %d is missing last_update_time", *room.ID)
+	}
+
 	activity := domain.UnknownActivity()
-	if room.LastUpdateTime != 0 {
+	if *room.LastUpdateTime != 0 {
 		var err error
-		activity, err = domain.KnownActivity(time.Unix(room.LastUpdateTime, 0))
+		activity, err = domain.KnownActivity(time.Unix(*room.LastUpdateTime, 0))
 		if err != nil {
-			return domain.Conversation{}, fmt.Errorf("create Chatwork room %d activity: %w", room.ID, err)
+			return domain.Conversation{}, fmt.Errorf("create Chatwork room %d activity: %w", *room.ID, err)
 		}
 	}
 
 	protection := domain.ProtectionNone
 	switch {
-	case room.Type == "direct":
+	case *room.Type == "direct":
 		protection = domain.ProtectionDirect
-	case room.Sticky:
+	case *room.Sticky:
 		protection = domain.ProtectionSticky
 	}
 
 	conversation, err := domain.NewConversation(
 		domain.ServiceChatwork,
-		strconv.FormatInt(room.ID, 10),
-		room.Name,
+		strconv.FormatInt(*room.ID, 10),
+		*room.Name,
 		activity,
 		protection,
 	)
 	if err != nil {
-		return domain.Conversation{}, fmt.Errorf("create Chatwork room %d: %w", room.ID, err)
+		return domain.Conversation{}, fmt.Errorf("create Chatwork room %d: %w", *room.ID, err)
 	}
 	return conversation, nil
 }
