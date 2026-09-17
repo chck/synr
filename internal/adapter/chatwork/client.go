@@ -159,7 +159,7 @@ func (room room) conversation() (domain.Conversation, error) {
 	}
 
 	activity := domain.UnknownActivity()
-	if *room.LastUpdateTime != 0 {
+	if *room.LastUpdateTime > 0 {
 		var err error
 		activity, err = domain.KnownActivity(time.Unix(*room.LastUpdateTime, 0))
 		if err != nil {

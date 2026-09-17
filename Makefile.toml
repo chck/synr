@@ -44,6 +44,18 @@ args = ["run", "./cmd/synr", "--help"]
 command = "go"
 args = ["mod", "tidy"]
 
+[tasks.modules]
+command = "go"
+args = ["list", "-m", "all"]
+
+[tasks.clean-testcache]
+command = "go"
+args = ["clean", "-testcache"]
+
+[tasks.test-preview-repeat]
+command = "go"
+args = ["test", "./internal/presentation/cli", "./internal/usecase", "-run", "Preview|DoesNotLeave|ListFails", "-count=20"]
+
 [tasks.build]
 command = "go"
 args = ["build", "./..."]

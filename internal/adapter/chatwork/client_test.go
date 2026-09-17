@@ -107,6 +107,25 @@ func TestListTreatsZeroTimestampAsUnknown(t *testing.T) {
 	}
 }
 
+func TestListTreatsNegativeTimestampAsUnknown(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
+		writer.Header().Set("Content-Type", "application/json")
+		_, _ = io.WriteString(writer, `[{"room_id":106,"name":"invalid timestamp","type":"group","sticky":false,"last_update_time":-1}]`)
+	}))
+	defer server.Close()
+
+	conversations, err := newTestClient(t, server).List(context.Background())
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(conversations) != 1 {
+		t.Fatalf("conversation count = %d, want 1", len(conversations))
+	}
+	if conversations[0].Activity().Known() {
+		t.Error("negative timestamp activity is known, want unknown")
+	}
+}
+
 func TestListRejectsIncompleteRoomData(t *testing.T) {
 	for _, test := range []struct {
 		name string
