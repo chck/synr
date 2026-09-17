@@ -1,6 +1,6 @@
 module github.com/chck/synr
 
-go 1.12
+go 1.27
 
 require (
 	github.com/jessevdk/go-flags v0.0.0-20170926144705-f88afde2fa19

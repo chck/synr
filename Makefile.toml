@@ -1,0 +1,28 @@
+[tasks.fmt]
+command = "go"
+args = ["fmt", "./..."]
+
+[tasks.fmt-check]
+script = '''
+files="$(gofmt -l $(git ls-files '*.go'))"
+test -z "$files" || { echo "$files"; exit 1; }
+'''
+
+[tasks.vet]
+command = "go"
+args = ["vet", "./..."]
+
+[tasks.test]
+command = "go"
+args = ["test", "-race", "./..."]
+
+[tasks.build]
+command = "go"
+args = ["build", "./..."]
+
+[tasks.vuln]
+command = "go"
+args = ["run", "golang.org/x/vuln/cmd/govulncheck@v1.1.4", "./..."]
+
+[tasks.check]
+dependencies = ["fmt-check", "vet", "test", "build", "vuln"]
