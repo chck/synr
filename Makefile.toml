@@ -52,5 +52,18 @@ args = ["build", "./..."]
 command = "go"
 args = ["run", "golang.org/x/vuln/cmd/govulncheck@v1.1.4", "./..."]
 
+[tasks.goreleaser-check]
+script = '''
+git_common_dir="$(git rev-parse --git-common-dir)"
+docker run --rm -v "$PWD:/src" -v "$git_common_dir:$git_common_dir:ro" -w /src goreleaser/goreleaser:v2.18.2 check
+'''
+
+[tasks.goreleaser-snapshot]
+script = '''
+git_common_dir="$(git rev-parse --git-common-dir)"
+docker run --rm -v "$PWD:/src" -v "$git_common_dir:$git_common_dir:ro" -w /src goreleaser/goreleaser:v2.18.2 release --snapshot --clean
+'''
+
 [tasks.check]
 dependencies = ["fmt-check", "vet", "test", "build", "vuln"]
+command = "true"

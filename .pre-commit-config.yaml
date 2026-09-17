@@ -1,0 +1,13 @@
+repos:
+  - repo: local
+    hooks:
+      - id: makers-fmt-check
+        name: makers fmt-check
+        entry: makers fmt-check
+        language: system
+        pass_filenames: false
+      - id: makers-check
+        name: makers check
+        entry: makers check
+        language: system
+        pass_filenames: false
