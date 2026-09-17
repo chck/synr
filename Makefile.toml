@@ -24,6 +24,10 @@ args = ["test", "./internal/adapter/config", "-v"]
 command = "go"
 args = ["test", "./internal/adapter/chatwork", "-v"]
 
+[tasks.test-zulip]
+command = "go"
+args = ["test", "./internal/adapter/zulip", "-v"]
+
 [tasks.build]
 command = "go"
 args = ["build", "./..."]
