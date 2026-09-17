@@ -21,6 +21,35 @@ func TestLoadMissingFileReturnsEmptyConfig(t *testing.T) {
 	}
 }
 
+func TestLoadRequiresServicesMapping(t *testing.T) {
+	for _, test := range []struct {
+		name    string
+		content string
+	}{
+		{name: "empty document mapping", content: "{}\n"},
+		{name: "null document", content: "null\n"},
+		{name: "null services", content: "services: null\n"},
+		{name: "sequence services", content: "services: []\n"},
+		{name: "scalar services", content: "services: value\n"},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			if _, err := Load(writeConfig(t, test.content)); err == nil {
+				t.Fatal("Load accepted a document without a services mapping")
+			}
+		})
+	}
+}
+
+func TestLoadAcceptsEmptyServicesMapping(t *testing.T) {
+	configuration, err := Load(writeConfig(t, "services: {}\n"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got := configuration.ProtectedIDs(domain.ServiceSlack); len(got) != 0 {
+		t.Errorf("ProtectedIDs(slack) = %v, want empty", got)
+	}
+}
+
 func TestLoadRejectsUnknownYAMLKey(t *testing.T) {
 	path := writeConfig(t, "unknown: true\n")
 

@@ -26,7 +26,7 @@ type Config struct {
 }
 
 type fileConfig struct {
-	Services servicesConfig `yaml:"services"`
+	Services *servicesConfig `yaml:"services"`
 }
 
 type servicesConfig struct {
@@ -65,6 +65,9 @@ func Load(path string) (Config, error) {
 	}
 	if err := rejectAdditionalDocument(decoder); err != nil {
 		return Config{}, fmt.Errorf("decode configuration %q: %w", path, err)
+	}
+	if decoded.Services == nil {
+		return Config{}, fmt.Errorf("configuration %q requires a services mapping; put service settings under services", path)
 	}
 	return newConfig(decoded)
 }
