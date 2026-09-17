@@ -121,17 +121,21 @@ func TestListProtectsGeneralChannel(t *testing.T) {
 	}
 }
 
-func TestListTreatsMissingLastReadAsUnknown(t *testing.T) {
+func TestListTreatsMissingOrMalformedLastReadAsUnknown(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
 		switch request.URL.Path {
 		case "/conversations.list":
-			writeJSON(t, writer, `{"ok":true,"channels":[{"id":"C1","is_member":true},{"id":"C2","is_member":true}],"response_metadata":{"next_cursor":""}}`)
+			writeJSON(t, writer, `{"ok":true,"channels":[{"id":"C1","is_member":true},{"id":"C2","is_member":true},{"id":"C3","is_member":true},{"id":"C4","is_member":true}],"response_metadata":{"next_cursor":""}}`)
 		case "/conversations.info":
 			switch formValue(t, request, "channel") {
 			case "C1":
 				writeJSON(t, writer, `{"ok":true,"channel":{"id":"C1","name":"missing","is_general":false}}`)
 			case "C2":
 				writeJSON(t, writer, `{"ok":true,"channel":{"id":"C2","name":"invalid","is_general":false,"last_read":"not-a-timestamp"}}`)
+			case "C3":
+				writeJSON(t, writer, `{"ok":true,"channel":{"id":"C3","name":"non-numeric fraction","is_general":false,"last_read":"1789718400.not-a-fraction"}}`)
+			case "C4":
+				writeJSON(t, writer, `{"ok":true,"channel":{"id":"C4","name":"empty fraction","is_general":false,"last_read":"1789718400."}}`)
 			}
 		default:
 			writer.WriteHeader(http.StatusNotFound)

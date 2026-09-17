@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"regexp"
 	"strconv"
 	"strings"
 	"time"
@@ -17,6 +18,8 @@ import (
 type Client struct {
 	api *slackapi.Client
 }
+
+var slackTimestampPattern = regexp.MustCompile(`^[0-9]+\.[0-9]{6}$`)
 
 func New(token string, httpClient *http.Client, apiURL string) (*Client, error) {
 	if strings.TrimSpace(token) == "" {
@@ -102,6 +105,10 @@ func conversationFromChannel(channel slackapi.Channel) (domain.Conversation, err
 }
 
 func activityFromLastRead(lastRead string) domain.Activity {
+	if !slackTimestampPattern.MatchString(lastRead) {
+		return domain.UnknownActivity()
+	}
+
 	seconds, err := strconv.ParseInt(strings.SplitN(lastRead, ".", 2)[0], 10, 64)
 	if err != nil || seconds <= 0 {
 		return domain.UnknownActivity()
