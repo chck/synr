@@ -4,6 +4,8 @@ github.com/nlopes/slack v0.0.0-20170725121730-5cde21b8b96a h1:ln3NXCJJdiiEF8Jmy1
 github.com/nlopes/slack v0.0.0-20170725121730-5cde21b8b96a/go.mod h1:jVI4BBK3lSktibKahxBF74txcK2vyvkza1z/+rRnVAM=
 github.com/onsi/ginkgo v0.0.0-20170829012221-11459a886d9c/go.mod h1:lLunBs/Ym6LB5Z9jYTR76FiuTmxDTDusOGeTQH+WWjE=
 github.com/onsi/gomega v0.0.0-20171012021143-283ed655c6b8/go.mod h1:C1qb7wdrVGGVU+Z6iS04AVkA3Q65CEZX59MT0QO5uiA=
+go.yaml.in/yaml/v3 v3.0.5 h1:N6y/pJk8buWs9NY5ERU2HSMfm+IuD/OtfdAnq6kESPw=
+go.yaml.in/yaml/v3 v3.0.5/go.mod h1:HVTZu1O7/Vkt2N+BFy8Zza+lnLsABggaTM2ZpNIGuKg=
 golang.org/x/net v0.0.0-20171027103834-c73622c77280 h1:TFSo8RGq2v9crRl/RW0EH71y1kdSjqeCxljzuDsD+oA=
 golang.org/x/net v0.0.0-20171027103834-c73622c77280/go.mod h1:mL1N/T3taQHkDXs73rZJwtUhF3w3ftmwwsq0BUmARs4=
 golang.org/x/sys v0.0.0-20171027071755-0649f9fe46d9/go.mod h1:STP8DvDyc/dI5b8T5hshtkjS+E42TnysNCUPdjciGhY=

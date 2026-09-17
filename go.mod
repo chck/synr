@@ -10,5 +10,6 @@ require (
 	golang.org/x/net v0.0.0-20171027103834-c73622c77280
 	golang.org/x/sys v0.0.0-20171027071755-0649f9fe46d9
 	golang.org/x/text v0.0.0-20171024115504-6eab0e8f74e8
+	go.yaml.in/yaml/v3 v3.0.5
 	gopkg.in/yaml.v2 v2.0.0-20170812160011-eb3733d160e7
 )

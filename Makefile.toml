@@ -16,6 +16,10 @@ args = ["vet", "./..."]
 command = "go"
 args = ["test", "-race", "./..."]
 
+[tasks.test-config]
+command = "go"
+args = ["test", "./internal/adapter/config", "-v"]
+
 [tasks.build]
 command = "go"
 args = ["build", "./..."]
