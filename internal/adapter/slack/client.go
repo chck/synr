@@ -62,19 +62,9 @@ func (client *Client) List(ctx context.Context) ([]domain.Conversation, error) {
 				return nil, fmt.Errorf("get Slack conversation %q info: %w", channel.ID, err)
 			}
 
-			history, err := client.api.GetConversationHistoryContext(ctx, &slackapi.GetConversationHistoryParameters{
-				ChannelID: channel.ID,
-				Limit:     1,
-			})
+			activity, err := client.latestActivity(ctx, channel.ID)
 			if err != nil {
 				return nil, fmt.Errorf("get Slack conversation %q history: %w", channel.ID, err)
-			}
-			if history.Messages == nil {
-				return nil, fmt.Errorf("get Slack conversation %q history: response is missing a messages array", channel.ID)
-			}
-			activity := domain.UnknownActivity()
-			if len(history.Messages) > 0 {
-				activity = activityFromTimestamp(history.Messages[0].Timestamp)
 			}
 
 			conversation, err := conversationFromChannel(*info, activity)
@@ -88,6 +78,45 @@ func (client *Client) List(ctx context.Context) ([]domain.Conversation, error) {
 			return conversations, nil
 		}
 		cursor = nextCursor
+	}
+}
+
+func (client *Client) latestActivity(ctx context.Context, channelID string) (domain.Activity, error) {
+	activity := domain.UnknownActivity()
+	var cursor string
+	seenCursors := make(map[string]struct{})
+	for {
+		history, err := client.api.GetConversationHistoryContext(ctx, &slackapi.GetConversationHistoryParameters{
+			ChannelID: channelID,
+			Cursor:    cursor,
+			Limit:     200,
+		})
+		if err != nil {
+			return domain.Activity{}, err
+		}
+		if history.Messages == nil {
+			return domain.Activity{}, fmt.Errorf("response is missing a messages array")
+		}
+		for _, message := range history.Messages {
+			candidate, err := activityFromMessage(message)
+			if err != nil {
+				return domain.Activity{}, err
+			}
+			if !activity.Known() || candidate.At().After(activity.At()) {
+				activity = candidate
+			}
+		}
+		cursor = history.ResponseMetaData.NextCursor
+		if cursor == "" {
+			if history.HasMore {
+				return domain.Activity{}, fmt.Errorf("incomplete history: has_more is true without a next cursor")
+			}
+			return activity, nil
+		}
+		if _, seen := seenCursors[cursor]; seen {
+			return domain.Activity{}, fmt.Errorf("incomplete history: repeated pagination cursor")
+		}
+		seenCursors[cursor] = struct{}{}
 	}
 }
 
@@ -121,19 +150,47 @@ func conversationFromChannel(channel slackapi.Channel, activity domain.Activity)
 	return conversation, nil
 }
 
-func activityFromTimestamp(timestamp string) domain.Activity {
-	if !slackTimestampPattern.MatchString(timestamp) {
-		return domain.UnknownActivity()
-	}
-
-	seconds, err := strconv.ParseInt(strings.SplitN(timestamp, ".", 2)[0], 10, 64)
-	if err != nil || seconds <= 0 {
-		return domain.UnknownActivity()
-	}
-
-	activity, err := domain.KnownActivity(time.Unix(seconds, 0))
+func activityFromMessage(message slackapi.Message) (domain.Activity, error) {
+	activity, err := activityFromTimestamp(message.Timestamp)
 	if err != nil {
-		return domain.UnknownActivity()
+		return domain.Activity{}, fmt.Errorf("message ts: %w", err)
 	}
-	return activity
+	if message.ReplyCount < 0 {
+		return domain.Activity{}, fmt.Errorf("message reply_count must not be negative")
+	}
+	if message.LatestReply == "" {
+		if message.ReplyCount > 0 {
+			return domain.Activity{}, fmt.Errorf("message with replies is missing latest_reply")
+		}
+		return activity, nil
+	}
+	latestReply, err := activityFromTimestamp(message.LatestReply)
+	if err != nil {
+		return domain.Activity{}, fmt.Errorf("message latest_reply: %w", err)
+	}
+	if latestReply.At().After(activity.At()) {
+		return latestReply, nil
+	}
+	return activity, nil
+}
+
+func activityFromTimestamp(timestamp string) (domain.Activity, error) {
+	if !slackTimestampPattern.MatchString(timestamp) {
+		return domain.Activity{}, fmt.Errorf("invalid timestamp %q", timestamp)
+	}
+
+	parts := strings.SplitN(timestamp, ".", 2)
+	seconds, err := strconv.ParseInt(parts[0], 10, 64)
+	if err != nil {
+		return domain.Activity{}, fmt.Errorf("invalid timestamp seconds: %w", err)
+	}
+	if seconds <= 0 {
+		return domain.Activity{}, fmt.Errorf("timestamp seconds must be positive")
+	}
+	microseconds, err := strconv.ParseInt(parts[1], 10, 64)
+	if err != nil {
+		return domain.Activity{}, fmt.Errorf("invalid timestamp fraction: %w", err)
+	}
+
+	return domain.KnownActivity(time.Unix(seconds, microseconds*1000))
 }

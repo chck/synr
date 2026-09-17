@@ -36,13 +36,13 @@ func TestApplyUsesLatestMessageInsteadOfLastRead(t *testing.T) {
 			if got := formValue(t, request, "channel"); got != "C1" {
 				t.Errorf("history channel = %q, want C1", got)
 			}
-			if got := formValue(t, request, "limit"); got != "1" {
-				t.Errorf("history limit = %q, want 1", got)
+			if got := formValue(t, request, "limit"); got != "200" {
+				t.Errorf("history limit = %q, want 200", got)
 			}
 			if formValue(t, request, "oldest") != "" || formValue(t, request, "latest") != "" {
 				t.Error("history must request the newest message without time bounds")
 			}
-			writeJSON(t, writer, `{"ok":true,"messages":[{"ts":"1789689599.000000"}],"has_more":true}`)
+			writeJSON(t, writer, `{"ok":true,"messages":[{"ts":"1789689599.000000"}],"has_more":false}`)
 		case "/conversations.leave":
 			leaves++
 			writeJSON(t, writer, `{"ok":true}`)
@@ -63,6 +63,84 @@ func TestApplyUsesLatestMessageInsteadOfLastRead(t *testing.T) {
 	}
 	if got := result.Decisions[0].Conversation().Activity().At(); !got.Equal(time.Unix(1789689599, 0)) {
 		t.Errorf("activity = %v, want latest message timestamp", got)
+	}
+}
+
+func TestApplyPreservesChannelsWithRecentThreadReplies(t *testing.T) {
+	for _, test := range []struct {
+		name  string
+		pages []string
+	}{
+		{
+			name:  "newest parent reply",
+			pages: []string{`{"ok":true,"messages":[{"ts":"1710000000.000000","reply_count":1,"latest_reply":"1789689599.123456"}]}`},
+		},
+		{
+			name:  "older parent reply on same page",
+			pages: []string{`{"ok":true,"messages":[{"ts":"1710000000.000000"},{"ts":"1700000000.000000","reply_count":1,"latest_reply":"1789689599.123456"}]}`},
+		},
+		{
+			name: "older parent reply on next page",
+			pages: []string{
+				`{"ok":true,"messages":[{"ts":"1710000000.000000"}],"has_more":true,"response_metadata":{"next_cursor":"older"}}`,
+				`{"ok":true,"messages":[{"ts":"1700000000.000000","reply_count":1,"latest_reply":"1789689599.123456"}],"has_more":false}`,
+			},
+		},
+		{
+			name: "cursor continues after active page with false has_more",
+			pages: []string{
+				`{"ok":true,"messages":[{"ts":"1710000000.000000","reply_count":1,"latest_reply":"1789689599.123455"}],"has_more":false,"response_metadata":{"next_cursor":"older"}}`,
+				`{"ok":true,"messages":[{"ts":"1700000000.000000","reply_count":1,"latest_reply":"1789689599.123456"}],"has_more":false}`,
+			},
+		},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			leaves := 0
+			var cursors []string
+			server := httptest.NewServer(http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
+				switch request.URL.Path {
+				case "/conversations.list":
+					writeJSON(t, writer, `{"ok":true,"channels":[{"id":"C1","is_member":true}]}`)
+				case "/conversations.info":
+					writeJSON(t, writer, `{"ok":true,"channel":{"id":"C1","name":"thread active","is_general":false,"last_read":"1710000000.000000"}}`)
+				case "/conversations.history":
+					cursor := formValue(t, request, "cursor")
+					cursors = append(cursors, cursor)
+					if len(cursors) > len(test.pages) {
+						t.Error("history requested more pages than available")
+						writer.WriteHeader(http.StatusBadRequest)
+						return
+					}
+					writeJSON(t, writer, test.pages[len(cursors)-1])
+				case "/conversations.leave":
+					leaves++
+					writeJSON(t, writer, `{"ok":true}`)
+				default:
+					writer.WriteHeader(http.StatusNotFound)
+				}
+			}))
+			defer server.Close()
+			result, err := usecase.Scan(context.Background(), newTestClient(t, server), usecase.Request{BeforeMonths: 1, Apply: true}, fixedClock{})
+			if err != nil {
+				t.Fatal(err)
+			}
+			if leaves != 0 {
+				t.Errorf("leave count = %d, want 0 for recent thread reply", leaves)
+			}
+			if len(result.Decisions) != 1 || result.Decisions[0].Reason() != domain.ReasonActive {
+				t.Fatalf("decisions = %v, want one active conversation", result.Decisions)
+			}
+			if got := result.Decisions[0].Conversation().Activity().At(); !got.Equal(time.Unix(1789689599, 123456000)) {
+				t.Errorf("activity = %v, want latest reply including its fractional timestamp", got)
+			}
+			wantCursors := []string{""}
+			if len(test.pages) > 1 {
+				wantCursors = append(wantCursors, "older")
+			}
+			if !reflect.DeepEqual(cursors, wantCursors) {
+				t.Errorf("history cursors = %v, want %v", cursors, wantCursors)
+			}
+		})
 	}
 }
 
@@ -187,7 +265,7 @@ func TestListProtectsGeneralChannel(t *testing.T) {
 	}
 }
 
-func TestListTreatsMissingOrMalformedMessageTimestampAsUnknown(t *testing.T) {
+func TestListRejectsMissingOrMalformedMessageTimestamp(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
 		switch request.URL.Path {
 		case "/conversations.list":
@@ -213,13 +291,73 @@ func TestListTreatsMissingOrMalformedMessageTimestampAsUnknown(t *testing.T) {
 	defer server.Close()
 
 	conversations, err := newTestClient(t, server).List(context.Background())
-	if err != nil {
-		t.Fatal(err)
+	if err == nil || conversations != nil {
+		t.Fatalf("List() = %v, %v, want no partial data and a timestamp error", conversations, err)
 	}
-	for _, conversation := range conversations {
-		if conversation.Activity().Known() {
-			t.Errorf("conversation %q activity is known, want unknown", conversation.Name())
-		}
+}
+
+func TestApplyRejectsIncompleteHistoryPagesBeforeAnyLeave(t *testing.T) {
+	for _, test := range []struct {
+		name      string
+		body      string
+		status    int
+		wantError string
+	}{
+		{name: "missing messages", body: `{"ok":true}`, status: http.StatusOK, wantError: "messages"},
+		{name: "null messages", body: `{"ok":true,"messages":null}`, status: http.StatusOK, wantError: "messages"},
+		{name: "missing timestamp", body: `{"ok":true,"messages":[{}]}`, status: http.StatusOK, wantError: "timestamp"},
+		{name: "malformed timestamp", body: `{"ok":true,"messages":[{"ts":"invalid"}]}`, status: http.StatusOK, wantError: "timestamp"},
+		{name: "timestamp fraction", body: `{"ok":true,"messages":[{"ts":"1700000000.invalid"}]}`, status: http.StatusOK, wantError: "timestamp"},
+		{name: "timestamp empty fraction", body: `{"ok":true,"messages":[{"ts":"1700000000."}]}`, status: http.StatusOK, wantError: "timestamp"},
+		{name: "invalid latest reply", body: `{"ok":true,"messages":[{"ts":"1700000000.000000","reply_count":1,"latest_reply":"invalid"}]}`, status: http.StatusOK, wantError: "timestamp"},
+		{name: "missing latest reply", body: `{"ok":true,"messages":[{"ts":"1700000000.000000","reply_count":1}]}`, status: http.StatusOK, wantError: "latest_reply"},
+		{name: "negative reply count", body: `{"ok":true,"messages":[{"ts":"1700000000.000000","reply_count":-1}]}`, status: http.StatusOK, wantError: "reply_count"},
+		{name: "missing next cursor", body: `{"ok":true,"messages":[{"ts":"1700000000.000000"}],"has_more":true}`, status: http.StatusOK, wantError: "cursor"},
+		{name: "repeated cursor", body: `{"ok":true,"messages":[{"ts":"1700000000.000000"}],"has_more":true,"response_metadata":{"next_cursor":"older"}}`, status: http.StatusOK, wantError: "cursor"},
+		{name: "API error", body: `{"ok":false,"error":"missing_scope"}`, status: http.StatusOK, wantError: "missing_scope"},
+		{name: "HTTP error", body: `{"ok":false,"error":"ratelimited"}`, status: http.StatusTooManyRequests, wantError: "429"},
+		{name: "invalid JSON", body: `{`, status: http.StatusOK, wantError: "EOF"},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			leaves := 0
+			var cursors []string
+			server := httptest.NewServer(http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
+				switch request.URL.Path {
+				case "/conversations.list":
+					writeJSON(t, writer, `{"ok":true,"channels":[{"id":"C1","is_member":true}]}`)
+				case "/conversations.info":
+					writeJSON(t, writer, `{"ok":true,"channel":{"id":"C1","name":"history incomplete","is_general":false}}`)
+				case "/conversations.history":
+					cursors = append(cursors, formValue(t, request, "cursor"))
+					switch len(cursors) {
+					case 1:
+						writeJSON(t, writer, `{"ok":true,"messages":[{"ts":"1710000000.000000"}],"has_more":true,"response_metadata":{"next_cursor":"older"}}`)
+					case 2:
+						writer.Header().Set("Content-Type", "application/json")
+						writer.WriteHeader(test.status)
+						_, _ = io.WriteString(writer, test.body)
+					default:
+						writer.WriteHeader(http.StatusBadRequest)
+					}
+				case "/conversations.leave":
+					leaves++
+					writeJSON(t, writer, `{"ok":true}`)
+				default:
+					writer.WriteHeader(http.StatusNotFound)
+				}
+			}))
+			defer server.Close()
+			result, err := usecase.Scan(context.Background(), newTestClient(t, server), usecase.Request{BeforeMonths: 1, Apply: true}, fixedClock{})
+			if err == nil || !strings.Contains(err.Error(), "C1") || !strings.Contains(err.Error(), test.wantError) {
+				t.Errorf("Scan error = %v, want history error for C1 containing %q", err, test.wantError)
+			}
+			if leaves != 0 || len(result.Decisions) != 0 {
+				t.Errorf("leave count = %d, decisions = %v, want no leaves or partial decisions", leaves, result.Decisions)
+			}
+			if want := []string{"", "older"}; !reflect.DeepEqual(cursors, want) {
+				t.Errorf("history cursors = %v, want %v", cursors, want)
+			}
+		})
 	}
 }
 

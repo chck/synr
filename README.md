@@ -59,10 +59,10 @@ conversation with its service, name, stable ID, last activity, decision, and
 reason. Only conversations with known activity strictly older than the cutoff
 can be eligible.
 
-- Slack: activity comes from the newest accessible message, and the workspace
-  general channel is never left. The token needs the applicable
-  `channels:history` and `groups:history` scopes; unavailable history stops the
-  scan before any leave.
+- Slack: activity includes messages and thread replies across all accessible
+  history pages, and the workspace general channel is never left. The token
+  needs the applicable `channels:history` and `groups:history` scopes;
+  unavailable history stops the scan before any leave.
 - Chatwork: sticky rooms, direct chats, and My Chat are never left. Only group
   rooms can be eligible; unknown room types stop the scan before any leave.
 - Zulip: channels pinned by the current user are never unsubscribed.
