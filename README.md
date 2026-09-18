@@ -1,5 +1,9 @@
 # synr
 
+[![CI](https://github.com/chck/synr/actions/workflows/ci.yml/badge.svg?branch=master)](https://github.com/chck/synr/actions/workflows/ci.yml)
+[![Go Version](https://img.shields.io/github/go-mod/go-version/chck/synr)](go.mod)
+[![License](https://img.shields.io/github/license/chck/synr)](LICENSE)
+
 `synr` previews, and with explicit approval leaves, inactive conversations in
 Slack, Chatwork, and Zulip.
 
