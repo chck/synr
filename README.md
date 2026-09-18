@@ -1,6 +1,6 @@
 # synr
 
-[![CI](https://github.com/chck/synr/actions/workflows/ci.yml/badge.svg?branch=master)](https://github.com/chck/synr/actions/workflows/ci.yml)
+[![CI](https://github.com/chck/synr/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/chck/synr/actions/workflows/ci.yml)
 [![Go Version](https://img.shields.io/github/go-mod/go-version/chck/synr)](go.mod)
 [![License](https://img.shields.io/github/license/chck/synr)](LICENSE)
 

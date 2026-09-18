@@ -647,7 +647,7 @@ Expected: the worktree's `.git/hooks/pre-commit` is installed.
 
 - [ ] **Step 2: Add CI and release workflows**
 
-CI triggers on pull requests and pushes to `master`, uses `ubuntu-latest`, `actions/checkout@v7`, `actions/setup-go@v7` with `go-version: 1.27.x`, installs cargo-make 0.37.24 with `cargo install --locked cargo-make --version 0.37.24`, and runs `makers check`.
+CI triggers on pull requests and pushes to `main`, uses `ubuntu-latest`, `actions/checkout@v7`, `actions/setup-go@v7` with `go-version: 1.27.x`, installs cargo-make 0.37.24 with `cargo install --locked cargo-make --version 0.37.24`, and runs `makers check`.
 
 Release triggers on pushed tags `v*`, uses the same checkout/setup actions, and runs `goreleaser/goreleaser-action@v7` with `version: v2.18.2`, `args: release --clean`, and `GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}`.
 
